@@ -1,0 +1,351 @@
+Домашняя контрольная работа №3. Пояснения к
+выполнению
+Цель работы
+Изучение методов подготовки видеоданных для задач обнаружения объектов. Освоение
+архитектур нейронных сетей для детекции объектов, включая Region-based методы и
+методы на основе Feature Pyramid Networks. Практика в применении Transfer Learning для
+задач обнаружения. Разработка конвейера обработки видеопотока в реальном времени с
+постобработкой результатов.
+Задачи работы
+1. Подготовить видеоданные и извлечь фреймы с аннотациями bounding box
+2. Разработать или дообучить нейронную сеть для обнаружения объектов на основе
+архитектур Faster R-CNN, RetinaNet, EfficientDet или аналогичных
+3. Обосновать выбор гиперпараметров обучения (оптимизатор, функция потерь,
+метрики для задачи обнаружения)
+4. Провести анализ результатов обучения с построением графиков и вычислением
+метрик качества (mAP, precision, recall)
+5. Реализовать обработку видеопотока с визуализацией результатов обнаружения
+Теоретическая справка
+Обнаружение объектов vs Классификация
+Обнаружение объектов (Object Detection) отличается от классификации тем, что требует
+не только определить класс объекта, но и найти его локацию в виде bounding box'а
+(прямоугольника с координатами).
+Выходные данные модели обнаружения:
+• Для каждого обнаруженного объекта: (класс, confidence, x, y, width, height) или
+(класс, confidence, x1, y1, x2, y2)
+Архитектуры для обнаружения объектов
+Region-Based методы (R-CNN семейство)
+Faster R-CNN – одна из самых эффективных архитектур:
+• Backbone: сверточная сеть (ResNet50, VGG16 и т.д.) для извлечения признаков
+• Region Proposal Network (RPN): генерирует потенциальные регионы (ROI - Region
+of Interest)
+• ROI Pooling: выравнивает признаки для каждого региона
+• Classification Head: классифицирует объект в регионе
+• Regression Head: уточняет координаты bounding box
+Преимущества: Высокая точность обнаружения
+Недостатки: Медленнее single-shot методов, может быть сложнее в реальном времени
+Single-Shot методы
+RetinaNet и EfficientDet – более современные подходы:
+• Единая сверточная сеть обрабатывает все изображение за один проход
+• Feature Pyramid Network (FPN) обрабатывает объекты разных масштабов
+• Focal Loss применяется для решения проблемы дисбаланса между hard/easy
+примерами
+Преимущества: Быстрее, подходит для обработки в реальном времени
+Недостатки: Иногда ниже точность при наличии сложных сценариев
+YOLO архитектура
+YOLO (You Only Look Once) – популярная архитектура для обнаружения в реальном
+времени:
+• Делит изображение на сетку
+• Для каждой клетки предсказывает bounding box'ы и класс
+• Очень быстра, но может иметь проблемы с близко расположенными объектами
+Feature Pyramid Networks (FPN)
+Позволяет эффективно обнаруживать объекты разных масштабов:
+• Создает пирамиду признаков с разным разрешением
+• Позволяет обнаруживать как маленькие, так и большие объекты
+• Улучшает качество обнаружения в целом
+Функции потерь для обнаружения
+Classification Loss (Softmax Cross-Entropy):
+L_cls = -Σ log(p_i) для правильного класса
+Localization Loss (Smooth L1 Loss):
+L_loc = Σ SmoothL1(box_pred - box_true)
+SmoothL1 менее чувствителен к выбросам, чем L2 Loss.
+Focal Loss (для решения проблемы class imbalance):
+L_focal = -α(1-p_t)^γ log(p_t)
+где γ – параметр концентрации на hard примерах.
+Метрики качества для обнаружения
+Intersection over Union (IoU) – мера совпадения между predicted и ground truth box'ом:
+IoU = Area(Intersection) / Area(Union)
+Обычно используется порог IoU ≥ 0.5 или 0.75.
+Average Precision (AP) – площадь под кривой precision-recall:
+• вычисляется отдельно для каждого класса
+• mAP (mean AP) – средняя точность по всем классам
+Precision – доля корректных обнаружений:
+Precision = TP / (TP + FP)
+Recall – доля найденных объектов:
+Recall = TP / (TP + FN)
+Non-Maximum Suppression (NMS)
+Удаляет дублирующиеся bounding box'ы:
+1. Отсортировать боксы по confidence score
+2. Для каждого бокса высокого confidence удалить перекрывающиеся боксы
+3. Оставить только боксы с IoU < порога (обычно 0.5)
+Работа с видеопотоком
+Основные компоненты конвейера:
+import cv2
+import numpy as np
+# Загрузка видеофайла
+cap = cv2.VideoCapture('video.mp4')
+# Получение параметров видео
+fps = int(cap.get(cv2.CAP_PROP_FPS))
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# Обработка фреймов
+frame_count = 0
+while cap.isOpened():
+ ret, frame = cap.read()
+ if not ret:
+ break
+
+ # Инференс на фрейме
+ predictions = model.predict(frame)
+
+ # Постобработка: NMS, фильтрация по confidence
+ filtered_boxes = apply_nms(predictions, confidence_threshold=0.5)
+
+ # Визуализация
+ frame_with_boxes = draw_boxes(frame, filtered_boxes)
+
+ # Сохранение результата
+ cv2.imshow('Detection', frame_with_boxes)
+ if cv2.waitKey(1) & 0xFF == ord('q'):
+ break
+
+ frame_count += 1
+cap.release()
+cv2.destroyAllWindows()
+Оптимизация для работы в реальном времени
+Стратегии ускорения:
+1. Пропуск фреймов – обрабатывать каждый N-й фрейм
+2. Уменьшение разрешения – обрабатывать фреймы меньшего размера
+3. Квантизация модели – уменьшение точности (FP32 → INT8)
+4. Model Pruning – удаление малосвязных нейронов
+5. Использование GPU – ускорение вычислений
+6. Батчевая обработка – обработка нескольких фреймов одновременно
+Форматы аннотаций
+PASCAL VOC XML:
+<annotation>
+ <filename>image.jpg</filename>
+ <object>
+ <name>dog</name>
+ <bndbox>
+ <xmin>100</xmin>
+ <ymin>50</ymin>
+ <xmax>350</xmax>
+ <ymax>450</ymax>
+ </bndbox>
+ </object>
+</annotation>
+COCO JSON:
+{
+ "images": [{"id": 1, "file_name": "image.jpg", "width": 640, "height":
+480}],
+ "annotations": [{
+ "image_id": 1,
+ "category_id": 1,
+ "bbox": [100, 50, 250, 400],
+ "area": 100000
+ }],
+ "categories": [{"id": 1, "name": "dog"}]
+}
+YOLO TXT:
+<class_id> <x_center_norm> <y_center_norm> <width_norm> <height_norm>
+0 0.5 0.3 0.4 0.6
+Требования к отчету
+Часть 1. Подготовка видеоданных и аннотаций
+Требования:
+1. Выбрать 3-5 классов объектов для обнаружения (например: кошка, собака, птица,
+автомобиль, человек)
+2. Подготовить видеоклипы:
+o Собрать или загрузить 100-200 видеоклипов
+o Распределить по train/val/test: 70% / 15% / 15%
+o Каждый видеоклип 5-30 секунд
+3. Извлечение фреймов и аннотации:
+o Извлечь фреймы с интервалом (например, каждый 5-й или 10-й кадр)
+o Аннотировать боксы вручную или использовать существующие датасеты
+o Убедиться в качестве разметки
+4. Примените аугментацию:
+o Горизонтальное/вертикальное отражение
+o Случайная обрезка (при сохранении объектов)
+o Изменение яркости, контраста
+o Добавление шума
+Что включить в отчет:
+• Описание выбранных классов объектов
+• Примеры видеоклипов и извлеченных фреймов
+• Примеры аннотированных изображений (10-15 фреймов)
+• Статистика датасета: количество фреймов, распределение по классам, размер
+Часть 2. Выбор и создание архитектуры
+Требования:
+Реализовать один из трех подходов:
+Вариант А: Собственная архитектура на базе FPN
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+def create_fpn_detector(input_shape, num_classes):
+ """
+ Создает детектор на основе Feature Pyramid Network
+ """
+ # Backbone для извлечения признаков
+ backbone = keras.applications.ResNet50(
+ input_shape=input_shape,
+ include_top=False,
+ weights='imagenet'
+ )
+
+ # FPN для многомасштабных признаков
+ # Реализовать пирамиду признаков
+
+ # RPN для генерации region proposals
+ # Классификация и регрессия боксов
+
+ return model
+Вариант Б: Transfer Learning с Faster R-CNN
+import tensorflow_hub as hub
+# Загрузить предобученную Faster R-CNN модель
+detector =
+hub.load('https://tfhub.dev/tensorflow/faster_rcnn/resnet50_v1_640x640/1')
+Вариант В: Transfer Learning с EfficientDet
+from efficientdet.tf_efficientdet_keras import EfficientDetNet
+model = EfficientDetNet(config_file, num_classes=num_classes)
+model.load_weights('pretrained_weights.h5')
+Что включить в отчет:
+• Описание выбранной архитектуры
+• Визуализация архитектуры (model.summary())
+• Обоснование выбора (почему эта архитектура подходит)
+• Количество параметров и требуемая память
+Часть 3. Гиперпараметры обучения
+Требования:
+Выбрать и обосновать:
+1. Оптимизатор:
+o Adam с learning rate 1e-4 – 1e-3 для fine-tuning
+o SGD для более стабильного обучения
+o Обоснуйте выбор
+2. Функции потерь:
+o Classification loss: Softmax Cross-Entropy
+o Localization loss: Smooth L1
+o Focal Loss если используется (для решения class imbalance)
+3. Метрики:
+o mAP (mean Average Precision)
+o AP по классам
+o Precision, Recall
+4. Параметры обучения:
+o Batch size: 16-32 (зависит от памяти GPU)
+o Epochs: 50-100
+o Learning rate schedule: снижение при плато валидационной метрики
+Таблица гиперпараметров:
+Параметр Значение Обоснование
+Оптимизатор Adam Адаптивный LR, подходит для Faster R-CNN
+Learning rate 0.0001 Стандарт для fine-tuning, медленное обучение
+Loss (Class) Softmax CE Многоклассовая классификация
+Loss (Loc) Smooth L1 Устойчив к выбросам в координатах
+Batch size 16 Баланс памяти и стабильности
+Метрики mAP@0.5, mAP@0.75 Стандартные для обнаружения
+Часть 4. Графики и метрики
+Требования:
+1. Графики обучения:
+o Total Loss (Classification + Localization)
+o Classification Loss отдельно
+o Localization Loss отдельно
+o mAP по эпохам
+2. Метрики на тестовом наборе:
+o mAP@0.5 (IoU ≥ 0.5)
+o mAP@0.75 (IoU ≥ 0.75)
+o Average Recall
+o AP по каждому классу
+3. Примеры предсказаний:
+o 10-15 изображений из тестового набора с визуализированными боксами
+o Показать как успешные, так и неудачные примеры
+4. Анализ ошибок:
+o Какие классы обнаруживаются лучше/хуже
+o Анализ false positives и false negatives
+o Влияние размера объекта на качество обнаружения
+Часть 5. Обработка видеопотока
+Требования:
+1. Реализовать конвейер:
+o Загрузка видеоисточника (файл или камера)
+o Извлечение и предобработка фреймов
+o Инференс модели
+o Non-Maximum Suppression для удаления дубликатов
+o Визуализация боксов и меток
+2. Код обработки видео:
+import cv2
+from model import load_model
+# Загрузить модель
+model = load_model('model_weights.h5')
+# Открыть видео
+cap = cv2.VideoCapture('test_video.mp4')
+# Параметры
+confidence_threshold = 0.5
+nms_threshold = 0.5
+while cap.isOpened():
+ ret, frame = cap.read()
+ if not ret:
+ break
+
+ # Предсказание
+ predictions = model.predict(frame)
+
+ # NMS
+ filtered_boxes = non_max_suppression(predictions, nms_threshold)
+
+ # Фильтрация по confidence
+ filtered_boxes = [box for box in filtered_boxes
+ if box['confidence'] > confidence_threshold]
+
+ # Визуализация
+ result_frame = draw_boxes(frame, filtered_boxes, class_names)
+
+ cv2.imshow('Object Detection', result_frame)
+
+ if cv2.waitKey(1) & 0xFF == ord('q'):
+ break
+cap.release()
+cv2.destroyAllWindows()
+3. Оптимизация производительности:
+o Измерить FPS (frames per second)
+o Оптимизировать при необходимости (пропуск фреймов, уменьшение
+разрешения)
+o Профилирование CPU/GPU использования
+Часть 6. Выводы
+Требования:
+Напишите развернутые выводы, включающие:
+1. Оценка подготовленного датасета
+o Достаточность размера
+o Качество аннотаций
+o Проблемы при подготовке
+2. Анализ результатов обучения
+o Итоговые метрики (mAP, precision, recall)
+o Переобучение/недообучение
+o Сравнение на train/val/test наборах
+3. Эффективность архитектуры
+o Скорость обнаружения (FPS)
+o Точность vs скорость
+o Возможность использования в реальном времени
+4. Практическая применимость
+o На каких типах видео работает хорошо
+o Ограничения модели
+o Что можно улучшить
+Требования к оформлению
+1. Структура отчета:
+o Титульный лист
+o Содержание
+o Введение
+o Теоретическая часть
+o Практическая часть (все 6 разделов)
+o Выводы
+o Список источников
+2. Технические требования:
+o Jupyter Notebook или Python скрипты (прокомментированный код)
+o Все графики с подписями осей и легендой
+o Примеры обработанных видеоклипов (скриншоты или видео)
+o Скриншоты визуализации результатов
+3. Формат сдачи:
+o PDF-файл отчета (8-15 страниц)
+o Архив с кодом (разметка, аугментация, обучение, инференс)
+o Обученная модель (если размер позволяет) или скрипт для загрузки
+o Примеры аннотированных фреймов и результатов
+Дополнительные ресурсы
+• TensorFlow Object Detection API:
+https://github.com/tensorflow/models/tree/master/research/object_detection
+• Faster R-CNN статья: https://arxiv.org/abs/1506.01497
+• RetinaNet статья: https://arxiv.org/abs/1708.02002
+• EfficientDet: https://github.com/google/automl/tree/master/efficientdet
+• OpenCV VideoCapture documentation

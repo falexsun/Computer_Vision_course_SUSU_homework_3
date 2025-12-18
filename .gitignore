@@ -1,0 +1,169 @@
+# ===========================
+# Claude Code settings
+# ===========================
+.claude/
+
+# ===========================
+# Dataset (large files)
+# ===========================
+# Ignore all dataset content
+dataset/images/
+dataset/labels/
+dataset/*.cache
+
+# Keep only structure and config
+!dataset/
+!dataset/data.yaml
+!dataset/.gitkeep
+
+# Image files everywhere
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+*.tif
+*.tiff
+*.webp
+*.svg
+
+# ===========================
+# Videos (large files) - only raw videos
+# ===========================
+videos/raw/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
+# But keep test videos
+!videos/
+!videos/test/
+
+# ===========================
+# Python
+# ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ===========================
+# Jupyter Notebook
+# ===========================
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Jupyter NB Checkpoints in subdirs
+**/.ipynb_checkpoints/
+
+# ===========================
+# Virtual Environment
+# ===========================
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ===========================
+# IDE
+# ===========================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
+*.sublime-project
+
+# ===========================
+# Logs and temporary files
+# ===========================
+*.log
+logs/
+tensorboard/
+*.tmp
+*.temp
+*.cache
+*.bak
+*.orig
+
+# ===========================
+# Archives (large files)
+# ===========================
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.gz
+*.bz2
+
+# ===========================
+# Additional dataset folders
+# ===========================
+ExDark-12/
+data/
+raw_data/
+
+# ===========================
+# Keep models, outputs and runs
+# ===========================
+!models/
+!outputs/
+!runs/
+!runs/detect/
+!videos/test/
+
+# ===========================
+# Large model files - selectively
+# ===========================
+yolo*.pt
+!yolov8n.pt
+!yolov8s.pt
+!yolo11n.pt
+
+# ===========================
+# Keep essential files
+# ===========================
+!README.md
+!README_CHANGES.md
+!requirements.txt
+!homework_3_fast.ipynb
+!homework_3_object_detection.ipynb
+!.gitignore
+!.gitkeep
+!*.py
+!*.txt
+!*.md
+!*.yaml
+!*.yml

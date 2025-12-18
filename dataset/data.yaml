@@ -1,0 +1,11 @@
+names:
+- People
+- car
+- chair
+- Table
+- Bottle
+nc: 5
+path: c:\code\susu\CV\hw_3\dataset
+test: images/test
+train: images/train
+val: images/val

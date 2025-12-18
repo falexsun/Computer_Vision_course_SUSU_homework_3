@@ -1,0 +1,43 @@
+# Домашняя контрольная работа №3 - Обнаружение объектов в видеопотоке
+# Требования к окружению
+
+# Deep Learning Framework
+torch>=2.0.0
+torchvision>=0.15.0
+
+# YOLO (Ultralytics)
+ultralytics>=8.0.0
+
+# Computer Vision
+opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
+
+# Image Augmentation
+albumentations>=1.3.0
+
+# Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# COCO Metrics
+pycocotools>=2.0.6
+
+# Progress Bars
+tqdm>=4.65.0
+
+# YAML Configuration
+PyYAML>=6.0
+
+# Optional: для работы с Roboflow
+# roboflow>=1.1.0
+
+# Optional: для TensorBoard мониторинга
+# tensorboard>=2.13.0
+
+# Optional: для Weights & Biases
+# wandb>=0.15.0
