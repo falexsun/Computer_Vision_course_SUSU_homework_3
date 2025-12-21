@@ -27,20 +27,6 @@ dataset/*.cache
 *.webp
 *.svg
 
-# ===========================
-# Videos (large files) - only raw videos
-# ===========================
-videos/raw/
-*.mp4
-*.avi
-*.mov
-*.mkv
-*.wmv
-*.flv
-*.webm
-# But keep test videos
-!videos/
-!videos/test/
 
 # ===========================
 # Python
